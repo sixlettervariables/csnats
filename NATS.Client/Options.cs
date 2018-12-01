@@ -37,6 +37,7 @@ namespace NATS.Client
         int reconnectWait = Defaults.ReconnectWait;
         int pingInterval  = Defaults.PingInterval;
         int timeout       = Defaults.Timeout;
+        string inboxPrefix = IC.inboxPrefix;
 
         internal X509Certificate2Collection certificates = null;
  
@@ -457,6 +458,35 @@ namespace NATS.Client
             }
         }
 
+        /// <summary>
+        /// Gets or sets the inbox prefix to use for request replies.
+        /// </summary>
+        /// <remarks>
+        /// This will be used as the reply subscription for all requests
+        /// made using these options. It is undefined behavior to change
+        /// this after a connection has been made.
+        /// </remarks>
+        public string InboxPrefix
+        {
+            get { return inboxPrefix; }
+            set
+            {
+                if (String.IsNullOrWhiteSpace(value))
+                {
+                    throw new ArgumentException("Inbox prefix must not be null or empty", "value");
+                }
+
+                if (value.EndsWith('.'))
+                {
+                    inboxPrefix = value;
+                }
+                else
+                {
+                    inboxPrefix = value + ".";
+                }
+            }
+        }
+
         private void appendEventHandler(StringBuilder sb, String name, Delegate eh)
         {
             if (eh != null)
@@ -494,6 +524,7 @@ namespace NATS.Client
             sb.AppendFormat("Token={0};", Token);
             sb.AppendFormat("SubscriberDeliveryTaskCount={0};", SubscriberDeliveryTaskCount);
             sb.AppendFormat("SubscriptionBatchSize={0};", SubscriptionBatchSize);
+            sb.AppendFormat("InboxPrefix={0};", InboxPrefix);
 
             if (Servers == null)
             {

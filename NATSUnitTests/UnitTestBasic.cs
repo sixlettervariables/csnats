@@ -902,6 +902,38 @@ namespace NATSUnitTests
             }
         }
 
+        [Fact]
+        public void TestRequestWithCustomInbox()
+        {
+            using (new NATSServer())
+            {
+                var options = utils.DefaultTestOptions;
+                options.InboxPrefix = "_INBOX.customPrefix.";
+                using (IConnection c = ConnectionFactory.CreateConnection(options))
+                {
+                    using (IAsyncSubscription s = c.SubscribeAsync("foo"))
+                    {
+                        byte[] response = Encoding.UTF8.GetBytes("I will help you.");
+
+                        bool correctPrefix = false;
+                        s.MessageHandler += (sender, args) =>
+                        {
+                            correctPrefix = args.Message.Reply.StartsWith(options.InboxPrefix);
+                            c.Publish(args.Message.Reply, response);
+                            c.Flush();
+                        };
+
+                        s.Start();
+
+                        Msg m = c.Request("foo", Encoding.UTF8.GetBytes("help."), 5000);
+
+                        Assert.True(correctPrefix, "Did not receive reply with the expected prefix");
+                        Assert.True(compare(response, m.Data), "Response isn't valid");
+                    }
+                }
+            }
+        }
+
 #if NET45
         // This test method tests mulitiple overlapping requests across many
         // threads.  The responder simulates work, to introduce variablility

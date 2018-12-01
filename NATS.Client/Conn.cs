@@ -3080,7 +3080,7 @@ namespace NATS.Client
         {
             if (!opts.UseOldRequestStyle)
             {
-                return IC.inboxPrefix + Guid.NewGuid().ToString("N");
+                return opts.InboxPrefix + Guid.NewGuid().ToString("N");
             }
             else
             {
@@ -3091,7 +3091,7 @@ namespace NATS.Client
 
                 r.NextBytes(buf);
 
-                return IC.inboxPrefix + BitConverter.ToString(buf).Replace("-","");
+                return opts.InboxPrefix + BitConverter.ToString(buf).Replace("-","");
             }
         }
 
